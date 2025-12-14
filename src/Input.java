@@ -1,6 +1,11 @@
+package src;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
+/**
+ * Input class manages keyboard input (e.g., space bar to flap).
+ * It listens for key presses and triggers actions on the game.
+ */
 public class Input extends KeyAdapter {
     private GamePanel gamePanel;
 
@@ -26,4 +31,3 @@ public class Input extends KeyAdapter {
         }
     }
 }
-

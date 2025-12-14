@@ -1,4 +1,5 @@
-package main.java.flappybird;
+package src;
+
 import javax.swing.*;
 // package main.java.flappybird;
 
@@ -7,6 +8,9 @@ public class Main {
     public static void main(String[] args) throws Exception {
         int boardWidth = 360;
         int boardHeight = 640;
+
+        // Load game assets
+        Assets.load();
 
         JFrame frame = new JFrame("Flappy Bird");
         // frame.setVisible(true);

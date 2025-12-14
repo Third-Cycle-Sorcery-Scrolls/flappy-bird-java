@@ -1,9 +1,9 @@
-/**
- * ScoreManager keeps track of the player score and manages scoring updates.
- */
+package src;
 public class ScoreManager {
     private int score;
-
+ /**
+ * ScoreManager keeps track of the player score and manages scoring updates.
+ */
     /**
      * Constructor initializes score to zero.
      */
