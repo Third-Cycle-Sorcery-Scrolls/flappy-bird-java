@@ -13,7 +13,7 @@ public class Bird {
     private int y;
     private int width;
     private int height;
-    private BufferedImage img;
+    private BufferedImage img = Assets.BIRD;
     private int velocityY;
     private static final int GRAVITY = 1;
     private static final int JUMP_FORCE = -9;
@@ -23,7 +23,7 @@ public class Bird {
         this.y = y;
         this.width = width;
         this.height = height;
-        this.img = Assets.BIRD;
+        // this.img = Assets.BIRD; Avoid loading images in constructor
         this.velocityY = 0;
     }
 
