@@ -1,8 +1,11 @@
 package src;
 
+import java.util.Iterator;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+// import javax.management.ConstructorParameters;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
 // import java.io.IOException;
@@ -18,7 +21,7 @@ import java.awt.image.BufferedImage;
 public class GamePanel extends JPanel implements ActionListener {
     private final int boardWidth = 360;
     private final int boardHeight = 640;
-
+//As ratio is 360/640
     private BufferedImage backgroundImg;
     private BufferedImage gameOverImg;
     // private BufferedImage birdImg;
@@ -39,7 +42,6 @@ public class GamePanel extends JPanel implements ActionListener {
     // Image spriteSheetImage =
     // new ImageIcon(getClass().getResource("/assets/sprites.png")).getImage();
     // SpriteSheet spriteSheet = new SpriteSheet(spriteSheetImage);    
-
 /*
 
 Trial for sprite image implementation
@@ -98,7 +100,7 @@ Trial for sprite image implementation
         // bottomPipeImg = Assets.PIPE_BOTTOM;
 
         // Initialize game objects
-        bird = new Bird(boardWidth / 8, boardHeight / 2, 34, 24);
+        bird = new Bird(boardWidth / 8, boardHeight / 2, 51, 36);
         pipes = new ArrayList<>();
         scoreManager = new ScoreManager();
         gameOver = false;
@@ -120,17 +122,18 @@ Trial for sprite image implementation
         gameLoopTimer.start();
     }
 
-    
+    private final PipePool pipePool = new PipePool();
     //  Places a new pair of top and bottom pipes with a random vertical offset.
-    private void placePipe() {
-        int pipeWidth = 64;
-        int pipeHeight = 512;
-        int x = boardWidth; // start from right edge
-        // Random vertical position for the top pipe
-        int randomTopY = - (int)(Math.random() * (pipeHeight / 2)) - pipeHeight / 4;
-        Pipe pipePair = new Pipe(x, randomTopY, pipeWidth, pipeHeight);
-        pipes.add(pipePair);
-    }
+private void placePipe() {
+    int pipeWidth = 64;
+    int pipeHeight = 512;
+    int x = boardWidth; // start from right edge
+    int randomTopY = - (int)(Math.random() * (pipeHeight / 2)) - pipeHeight / 4;
+
+    // Acquire a pipe from the pipePool class
+    Pipe pipePair = pipePool.acquire(x, randomTopY, pipeWidth, pipeHeight);
+    pipes.add(pipePair);
+}
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -154,22 +157,31 @@ Trial for sprite image implementation
 
         // Move bird
         bird.move();
-
         // Move pipes and check for passing and collisions
-        for (Pipe pipe : pipes) {
-            pipe.move();
+Iterator<Pipe> it = pipes.iterator();
+while (it.hasNext()) {
+    Pipe pipe = it.next();
+    pipe.move();
 
-            // Check if bird passed the pipe pair for scoring
-            if (!pipe.isPassed() && bird.getX() > pipe.getX() + pipe.getWidth()) {
-                scoreManager.incrementScore();
-                pipe.setPassed(true);
-            }
+    // scoring
+    if (!pipe.isPassed() && bird.getX() > pipe.getX() + pipe.getWidth()) {
+        scoreManager.incrementScore();
+        pipe.setPassed(true);
+    }
 
-            // Check for collision
-            if (CollisionDetector.isColliding(bird, pipe)) {
-                gameOver = true;
-            }
-        }
+    // collision
+    if (CollisionDetector.isColliding(bird, pipe)) {
+        gameOver = true;
+        break;
+    }
+
+    // release when completely off left side of screen
+    if (pipe.isOffScreen()) {
+        it.remove();
+        pipePool.release(pipe); // return to pool for reuse
+    }
+}
+
 
         // Check if bird hit the ground
         if (bird.getY() + bird.getHeight() > boardHeight) {
@@ -213,19 +225,22 @@ Trial for sprite image implementation
         }
     }
 
-    /**
-     * Resets the game to initial state.
-     * Called when restarting after game over.
-     */
+
     public void resetGame() {
-        bird.reset(boardWidth / 8, boardHeight / 2);
-        pipes.clear();
-        scoreManager.reset();
-        gameOver = false;
-        // Restart timers
-        pipeSpawnerTimer.start();
-        gameLoopTimer.start();
+    // release all current pipes back to pool
+    for (Pipe p : pipes) {
+        pipePool.release(p);
     }
+    pipes.clear();
+
+    bird.reset(boardWidth / 8, boardHeight / 2);
+    scoreManager.reset();
+    gameOver = false;
+    // restart timers as before
+    pipeSpawnerTimer.start();
+    gameLoopTimer.start();
+}
+
 
     // Getter methods for bird and game state
 

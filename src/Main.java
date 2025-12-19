@@ -1,7 +1,6 @@
 package src;
 
 import javax.swing.*;
-// package main.java.flappybird;
 
 public class Main {
 
@@ -12,8 +11,12 @@ public class Main {
         // Load game assets
         Assets.load();
 
+
+
+
         JFrame frame = new JFrame("Flappy Bird");
         // frame.setVisible(true);
+        
 		frame.setSize(boardWidth, boardHeight);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
