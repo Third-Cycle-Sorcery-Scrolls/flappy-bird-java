@@ -1,0 +1,33 @@
+/* JavaFX Menu Styling */
+
+.menu-root {
+    -fx-background-color: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 100%);
+    -fx-padding: 20px;
+}
+
+.title {
+    -fx-fill: #FFFFFF;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 10, 0, 0, 2);
+}
+
+.menu-button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 5, 0, 0, 2);
+}
+
+.menu-button:hover {
+    -fx-background-color: #45a049;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 8, 0, 0, 3);
+}
+
+.menu-button:pressed {
+    -fx-background-color: #3d8b40;
+}
+

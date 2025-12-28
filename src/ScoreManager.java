@@ -1,14 +1,19 @@
 package src;
+
+/**
+ * ScoreManager keeps track of the player score and manages scoring updates.
+ * Also tracks the high score across game sessions.
+ */
 public class ScoreManager {
     private int score;
- /**
- * ScoreManager keeps track of the player score and manages scoring updates.
- */
+    private int highScore;
+    
     /**
-     * Constructor initializes score to zero.
+     * Constructor initializes score to zero and loads high score.
      */
     public ScoreManager() {
         score = 0;
+        highScore = 0; // Could load from file in the future
     }
 
     /**
@@ -32,5 +37,24 @@ public class ScoreManager {
      */
     public int getScore() {
         return score;
+    }
+    
+    /**
+     * Updates the high score if the current score is higher.
+     * Should be called when the game ends.
+     */
+    public void updateHighScore() {
+        if (score > highScore) {
+            highScore = score;
+        }
+    }
+    
+    /**
+     * Gets the high score.
+     *
+     * @return the high score
+     */
+    public int getHighScore() {
+        return highScore;
     }
 }

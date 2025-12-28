@@ -1,0 +1,52 @@
+/* JavaFX Game Over Screen Styling */
+
+.dark-overlay {
+    -fx-fill: rgba(0, 0, 0, 0.7);
+}
+
+.game-over-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 15px;
+    -fx-padding: 30px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 20, 0, 0, 5);
+}
+
+.game-over-title {
+    -fx-font-size: 42px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #D32F2F;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 10, 0, 0, 2);
+}
+
+.score-label {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+.high-score-label {
+    -fx-font-size: 20px;
+    -fx-font-weight: normal;
+    -fx-text-fill: #666666;
+}
+
+.game-over-button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 5, 0, 0, 2);
+}
+
+.game-over-button:hover {
+    -fx-background-color: #45a049;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 8, 0, 0, 3);
+}
+
+.game-over-button:pressed {
+    -fx-background-color: #3d8b40;
+}
+
