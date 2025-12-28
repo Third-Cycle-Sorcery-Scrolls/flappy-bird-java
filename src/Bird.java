@@ -6,22 +6,23 @@ import java.awt.Rectangle;
  * Bird class manages the bird's position, movement, and drawing.
  */
 public class Bird {
-    private int x;
-    private int y;
-    private int width;
-    private int height;
+    private float x;
+    private float y;
+    private float width;
+    private float height;
     private BufferedImage img = Assets.BIRD;
-    private int velocityY;
-    private int gravity = 1;
-    private static final int JUMP_FORCE = -9;
+    private float velocityY;
+    private float gravity;
+    private float jumpForce;
 
-    public Bird(int x, int y, int width, int height) {
+    public Bird(float x, float y, float width, float height) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
-        // this.img = Assets.BIRD; Avoid loading images in constructor
         this.velocityY = 0;
+        this.gravity = 1.0f;
+        this.jumpForce = -9.0f;
     }
 
     /**
@@ -40,16 +41,17 @@ public class Bird {
      * Causes the bird to jump by setting its vertical velocity.
      */
     public void jump() {
-        velocityY = JUMP_FORCE;
+        velocityY = jumpForce;
     }
 
     // Draws the bird on the screen
     public void draw(Graphics g) {
-        g.drawImage(img, x, y, width, height, null);
+        g.drawImage(img, Math.round(x), Math.round(y), Math.round(width), Math.round(height), null);
+
     }
 
       //Resets the bird to the given position and stops vertical movement.
-    public void reset(int newX, int newY) {
+    public void reset(float newX, float newY) {
         this.x = newX;
         this.y = newY;
         this.velocityY = 0;
@@ -57,22 +59,29 @@ public class Bird {
     
      //Gets the bounding rectangle of the bird for collision detection.
     public Rectangle getBounds() {
-        return new Rectangle(x, y, width, height);
+        return new Rectangle(Math.round(x), Math.round(y), Math.round(width), Math.round(height));
     }
 
     public int getX() {
-        return x;
+        return Math.round(x);
     }
 
     public int getY() {
-        return y;
+        return Math.round(y);
     }
 
-    public int getHeight() {
+    public float getHeight() {
         return height;
     }
 
-    public void setGravity(int gravity) {
+    public float getWidth() {
+        return width;
+    }
+
+    public void setGravity(float gravity) {
         this.gravity = gravity;
+    }
+    public void setJumpForce(float jumpForce) {
+        this.jumpForce = jumpForce;
     }
 }

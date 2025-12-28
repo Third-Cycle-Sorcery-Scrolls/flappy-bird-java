@@ -9,19 +9,15 @@ import java.awt.image.BufferedImage;
  * including movement, drawing, and reset logic for reuse.
  */
 public class Pipe {
-    private int x;
-    private int topY;
-    private int width;
-    private int height;
-
-    // Shared images from Assets (do not create per-instance)
+    private float x;
+    private float topY;
+    private float width;
+    private float height;
     private final BufferedImage topImage = Assets.PIPE_TOP;
     private final BufferedImage bottomImage = Assets.PIPE_BOTTOM;
-
     private boolean passed;
-
-    private int vGap;
-    private int speed;
+    private float vGap;
+    private float speed;
 
     // Cached rectangles to avoid allocating new Rectangle objects every frame
     private final Rectangle topBounds = new Rectangle();
@@ -31,7 +27,7 @@ public class Pipe {
      * Constructor for Pipe pair.
      * Note: prefer creating via PipePool or calling reset after construction.
      */
-    public Pipe(int startX, int topY, int width, int height, int vGap, int speed) {
+    public Pipe(float startX, float topY, float width, float height, float vGap, float speed) {
         this.x = startX;
         this.topY = topY;
         this.width = width;
@@ -46,7 +42,7 @@ public class Pipe {
      * Reset this pipe so it can be reused.
      * This should be called when retrieving a pipe from a pool.
      */
-    public void reset(int startX, int topY, int width, int height, int vGap, int speed){
+    public void reset(float startX, float topY, float width, float height, float vGap, float speed){
         this.x = startX;
         this.topY = topY;
         this.width = width;
@@ -79,19 +75,26 @@ public class Pipe {
      */
     public void draw(Graphics g) {
         // Draw top pipe
-        g.drawImage(topImage, x, topY, width, height, null);
+        g.drawImage(topImage, Math.round(x), Math.round(topY), Math.round(width), Math.round(height), null);
         // Draw bottom pipe (gap below top pipe)
-        int bottomY = topY + height + vGap;
-        g.drawImage(bottomImage, x, bottomY, width, height, null);
+        float bottomY = topY + height + vGap;
+        g.drawImage(bottomImage, Math.round(x), Math.round(bottomY), Math.round(width), Math.round(height), null);
     }
 
     /**
      * Update cached bounds rectangles to current position/size.
      */
     private void updateBounds() {
-        topBounds.setBounds(x, topY, width, height);
-        int bottomY = topY + height + vGap;
-        bottomBounds.setBounds(x, bottomY, width, height);
+        int intX = Math.round(x);
+        int intTopY = Math.round(topY);
+        int intWidth = Math.round(width);
+        int intHeight = Math.round(height);
+        
+        topBounds.setBounds(intX, intTopY, intWidth, intHeight);
+        
+        float bottomY = topY + height + vGap;
+        int intBottomY = Math.round(bottomY);
+        bottomBounds.setBounds(intX, intBottomY, intWidth, intHeight);
     }
 
     /**
@@ -112,11 +115,11 @@ public class Pipe {
         return bottomBounds;
     }
 
-    public int getX() {
+    public float getX() {
         return x;
     }
 
-    public int getWidth() {
+    public float getWidth() {
         return width;
     }
 
@@ -128,11 +131,11 @@ public class Pipe {
         this.passed = passed;
     }
 
-    public void setSpeed(int speed) {
+    public void setSpeed(float speed) {
         this.speed = speed;
     }
 
-    public void setVGap(int vGap) {
+    public void setVGap(float vGap) {
         this.vGap = vGap;
     }
 }

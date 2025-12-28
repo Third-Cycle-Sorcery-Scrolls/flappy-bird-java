@@ -64,7 +64,6 @@ public class GamePanel extends JPanel implements ActionListener {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         setFocusable(true);
 
-        
         // Load images
         backgroundImg = Assets.BACKGROUND;
         gameOverImg = Assets.GAMEOVER;
@@ -77,6 +76,7 @@ public class GamePanel extends JPanel implements ActionListener {
         // Phasers
         currentPhase = GamePhase.PHASE_1;
         isDarkMode = currentPhase.isDark();
+        bird.setJumpForce(currentPhase.getJumpForce());
 
         phaseTimer = new Timer(100, new ActionListener() {
             @Override
@@ -113,10 +113,10 @@ public class GamePanel extends JPanel implements ActionListener {
             advanceToNextPhase();
         }
 
-        if(isDarkMode && darknessAlpha < 0.7f){
-            darknessAlpha += 0.01f;
-            if(darknessAlpha > 0.7f){
-                darknessAlpha = 0.7f;
+        if(isDarkMode && darknessAlpha < 0.8f){
+            darknessAlpha += 0.02f;
+            if(darknessAlpha > 0.8f){
+                darknessAlpha = 0.8f;
             }
             darkOverlay = new Color(0, 0, 0, (int)(darknessAlpha * 255));
         }else if(!isDarkMode && darknessAlpha > 0f){
@@ -147,6 +147,7 @@ public class GamePanel extends JPanel implements ActionListener {
             pipe.setSpeed(currentPhase.getPipeSpeed());
         }
         bird.setGravity(currentPhase.getGravity());
+        bird.setJumpForce(currentPhase.getJumpForce());
 
         isDarkMode = currentPhase.isDark();
         if(!isDarkMode){
@@ -162,13 +163,13 @@ public class GamePanel extends JPanel implements ActionListener {
 
     //  Places a new pair of top and bottom pipes with a random vertical offset.
     private void placePipe() {
-        int pipeWidth = 64;
-        int pipeHeight = 512;
-        int x = boardWidth; // start from right edge
-        int randomTopY = -(int)(Math.random() * (pipeHeight / 2)) - pipeHeight / 4;
+        float pipeWidth = 64;
+        float pipeHeight = 512;
+        float x = boardWidth; // start from right edge
+        float randomTopY = -(float)(Math.random() * (pipeHeight / 2)) - pipeHeight / 4;
 
         // Use phase-specific vGap
-        int vGap = currentPhase.getVGap();
+        float vGap = currentPhase.getVGap();
                       
         // Acquire a pipe from the pipePool class
         Pipe pipePair = pipePool.acquire(x, randomTopY, pipeWidth, pipeHeight, vGap, currentPhase.getPipeSpeed());
@@ -204,6 +205,7 @@ public class GamePanel extends JPanel implements ActionListener {
 
         // Move bird
         bird.move();
+
         // Move pipes and check for passing and collisions
         Iterator<Pipe> it = pipes.iterator();
         while (it.hasNext()) {
@@ -212,7 +214,7 @@ public class GamePanel extends JPanel implements ActionListener {
 
             // scoring
             if (!pipe.isPassed() && bird.getX() > pipe.getX() + pipe.getWidth()) {
-                scoreManager.incrementScore();
+                scoreManager.incrementScore(currentPhase);
                 pipe.setPassed(true);
             }
 
@@ -384,6 +386,7 @@ public class GamePanel extends JPanel implements ActionListener {
         pipes.clear();
 
         bird.reset(boardWidth / 8, boardHeight / 2);
+        bird.reset(boardWidth / 8.0f, boardHeight / 2.0f);
         scoreManager.reset();
         gameOver = false;
         currentPhase = GamePhase.PHASE_1;
@@ -391,7 +394,11 @@ public class GamePanel extends JPanel implements ActionListener {
         isDarkMode = currentPhase.isDark();
         darknessAlpha = 0f;
         darkOverlay = new Color(0, 0, 0, 0);
+
+        bird.setJumpForce(currentPhase.getJumpForce());
+        
         applyPhaseSettings();
+
         // restart timers as before
         phaseTimer.restart();
         pipeSpawnerTimer.start();

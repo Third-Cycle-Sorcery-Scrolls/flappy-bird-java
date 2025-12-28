@@ -19,8 +19,8 @@ public class ScoreManager {
     /**
      * Increments the score by one.
      */
-    public void incrementScore() {
-        score++;
+    public void incrementScore(GamePhase currentPhase) {
+        score += currentPhase.getBaseScore();
     }
 
     /**

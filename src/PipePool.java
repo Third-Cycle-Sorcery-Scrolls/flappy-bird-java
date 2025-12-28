@@ -8,7 +8,7 @@ public class PipePool {
     // public PipePool() {
     // }
     //We aquire a pipe or create new if empty
-    public Pipe acquire(int startX, int topY, int width, int height, int vGap, int speed){
+    public Pipe acquire(float startX, float topY, float width, float height, float vGap, float speed){
         if (pool.isEmpty()) {
             return new Pipe(startX, topY, width, height, vGap, speed);
         } else {
