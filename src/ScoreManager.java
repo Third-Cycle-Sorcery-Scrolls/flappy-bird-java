@@ -1,60 +1,64 @@
 package src;
 
+import java.io.*;
+
 /**
- * ScoreManager keeps track of the player score and manages scoring updates.
- * Also tracks the high score across game sessions.
+ * Manages current score and persistent high score.
  */
 public class ScoreManager {
+
     private int score;
     private int highScore;
-    
-    /**
-     * Constructor initializes score to zero and loads high score.
-     */
+
+    private static final String FILE_NAME = "highscore.txt";
+
     public ScoreManager() {
         score = 0;
-        highScore = 0; // Could load from file in the future
+        highScore = loadHighScore();
     }
 
-    /**
-     * Increments the score by one.
-     */
-    public void incrementScore(GamePhase currentPhase) {
-        score += currentPhase.getBaseScore();
+    public void incrementScore() {
+        score++;
     }
 
-    /**
-     * Resets the score to zero.
-     */
     public void reset() {
         score = 0;
     }
 
-    /**
-     * Gets the current score.
-     *
-     * @return the current score
-     */
     public int getScore() {
         return score;
     }
-    
+
+    public int getHighScore() {
+        return highScore;
+    }
+
     /**
-     * Updates the high score if the current score is higher.
-     * Should be called when the game ends.
+     * Call when game ends.
      */
     public void updateHighScore() {
         if (score > highScore) {
             highScore = score;
+            saveHighScore();
         }
     }
-    
-    /**
-     * Gets the high score.
-     *
-     * @return the high score
-     */
-    public int getHighScore() {
-        return highScore;
+
+    // ---------------- FILE I/O ----------------
+
+    private int loadHighScore() {
+        try (BufferedReader br = new BufferedReader(new FileReader(FILE_NAME))) {
+            return Integer.parseInt(br.readLine());
+        } catch (Exception e) {
+            return 0; // first run or file missing
+        }
+    }
+
+    private void saveHighScore() {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(FILE_NAME))) {
+            bw.write(String.valueOf(highScore));
+        } catch (IOException e) {
+            System.err.println("Failed to save high score");
+        }
     }
 }
+
