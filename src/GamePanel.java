@@ -8,6 +8,8 @@ import java.util.ArrayList;
 // import javax.management.ConstructorParameters;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
+import javafx.application.Platform;
+import javafx.embed.swing.JFXPanel;
 // import java.io.IOException;
 // import java.awt.*;
 // import javax.imageio.ImageIO;
@@ -44,13 +46,21 @@ public class GamePanel extends JPanel implements ActionListener {
     private boolean isDarkMode = false;
     private float darknessAlpha = 0f;
     private Color darkOverlay = new Color(0, 0, 0, 0);
+    
+    // JavaFX Game Over overlay
+    private JFXPanel gameOverPanel;
+    private boolean gameOverScreenShown = false;
+    private GameOverActionListener gameOverActionListener;
 
 
     /**
      * Constructor for the GamePanel.
      * It initializes images, game objects, and timers.
+     * 
+     * @param gameOverActionListener listener for game over actions (can be null)
      */
-    public GamePanel() {
+    public GamePanel(GameOverActionListener gameOverActionListener) {
+        this.gameOverActionListener = gameOverActionListener;
         setPreferredSize(new Dimension(boardWidth, boardHeight));
         setFocusable(true);
 
@@ -170,10 +180,17 @@ public class GamePanel extends JPanel implements ActionListener {
         updateGame();
         repaint();
 
-        if (gameOver) {
+        if (gameOver && !gameOverScreenShown) {
             // Stop timers when game is over
             pipeSpawnerTimer.stop();
             gameLoopTimer.stop();
+            phaseTimer.stop();
+            
+            // Update high score
+            scoreManager.updateHighScore();
+            
+            // Show JavaFX game over screen
+            showGameOverScreen();
         }
     }
 
@@ -267,38 +284,119 @@ public class GamePanel extends JPanel implements ActionListener {
         
         // Draw score
         g.setFont(new Font("Arial", Font.PLAIN, 32));
-        if (gameOver) {
-            g.drawImage(gameOverImg, 0, boardHeight/2 - 42, 180*2, 42*2, null);
-            g.drawString("Final Score: " + scoreManager.getScore(), 10, 80);
-            g.setFont(new Font("Arial", Font.PLAIN, 24));
-            g.drawString("Phase: " + currentPhase.getPhaseName(), 10, 110);
-        } else {
+        if (!gameOverScreenShown) {
             g.drawString("Score: " + scoreManager.getScore(), 10, 80);
         }
     }
 
 
-    public void resetGame() {
-    // release all current pipes back to pool
-    for (Pipe p : pipes) {
-        pipePool.release(p);
+    /**
+     * Shows the JavaFX game over overlay.
+     * Must be called on Swing EDT.
+     */
+    private void showGameOverScreen() {
+        if (gameOverScreenShown) {
+            return;
+        }
+        gameOverScreenShown = true;
+        
+        // Create JFXPanel for game over overlay
+        gameOverPanel = new JFXPanel();
+        gameOverPanel.setPreferredSize(new Dimension(boardWidth, boardHeight));
+        gameOverPanel.setSize(boardWidth, boardHeight);
+        gameOverPanel.setBounds(0, 0, boardWidth, boardHeight);
+        gameOverPanel.setOpaque(false);
+        
+        // Use null layout for absolute positioning overlay
+        if (getLayout() == null) {
+            setLayout(null);
+        }
+        add(gameOverPanel);
+        gameOverPanel.setVisible(true);
+        // Bring to front by setting z-order (lower index = higher z-order)
+        setComponentZOrder(gameOverPanel, 0);
+        
+        // Initialize JavaFX scene on JavaFX Application Thread
+        Platform.runLater(() -> {
+            FxGameOverView gameOverView = new FxGameOverView(
+                boardWidth, 
+                boardHeight,
+                scoreManager.getScore(),
+                scoreManager.getHighScore(),
+                new GameOverListener() {
+                    @Override
+                    public void onRestart() {
+                        // Restart game on Swing EDT
+                        SwingUtilities.invokeLater(() -> {
+                            restartGame();
+                        });
+                    }
+                    
+                    @Override
+                    public void onExitToMenu() {
+                        // Exit to menu on Swing EDT
+                        SwingUtilities.invokeLater(() -> {
+                            exitToMenu();
+                        });
+                    }
+                }
+            );
+            
+            gameOverPanel.setScene(gameOverView.getScene());
+        });
+        
+        revalidate();
+        repaint();
     }
-    pipes.clear();
+    
+    /**
+     * Restarts the game after game over.
+     * Must be called on Swing EDT.
+     */
+    private void restartGame() {
+        // Remove game over overlay
+        if (gameOverPanel != null) {
+            remove(gameOverPanel);
+            gameOverPanel = null;
+        }
+        
+        gameOverScreenShown = false;
+        
+        // Reset game state
+        resetGame();
+    }
+    
+    /**
+     * Exits to main menu.
+     * Must be called on Swing EDT.
+     */
+    private void exitToMenu() {
+        if (gameOverActionListener != null) {
+            gameOverActionListener.onExitToMenu();
+        }
+    }
+    
+    public void resetGame() {
+        // release all current pipes back to pool
+        for (Pipe p : pipes) {
+            pipePool.release(p);
+        }
+        pipes.clear();
 
-    bird.reset(boardWidth / 8, boardHeight / 2);
-    scoreManager.reset();
-    gameOver = false;
-    currentPhase = GamePhase.PHASE_1;
-    phaseStartTime = System.currentTimeMillis();
-    isDarkMode = currentPhase.isDark();
-    darknessAlpha = 0f;
-    darkOverlay = new Color(0, 0, 0, 0);
-    applyPhaseSettings();
-    // restart timers as before
-    phaseTimer.restart();
-    pipeSpawnerTimer.start();
-    gameLoopTimer.start();
-}
+        bird.reset(boardWidth / 8, boardHeight / 2);
+        scoreManager.reset();
+        gameOver = false;
+        currentPhase = GamePhase.PHASE_1;
+        phaseStartTime = System.currentTimeMillis();
+        isDarkMode = currentPhase.isDark();
+        darknessAlpha = 0f;
+        darkOverlay = new Color(0, 0, 0, 0);
+        applyPhaseSettings();
+        // restart timers as before
+        phaseTimer.restart();
+        pipeSpawnerTimer.start();
+        gameLoopTimer.start();
+    }
 
     // Getter methods for bird and game state
     public Bird getBird() {
