@@ -20,15 +20,13 @@ public class Pipe {
 
     private boolean passed;
 
-    //private static final int VELOCITY_X = -4;
-    //private static final int GAP = 150; // gap between top and bottom pipe
+    private int vGap;
+    private int speed;
 
     // Cached rectangles to avoid allocating new Rectangle objects every frame
     private final Rectangle topBounds = new Rectangle();
     private final Rectangle bottomBounds = new Rectangle();
 
-    private int vGap;
-    private int speed;
 
     /**
      * Constructor for Pipe pair.
