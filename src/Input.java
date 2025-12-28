@@ -21,13 +21,20 @@ public class Input extends KeyAdapter {
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
+        boolean isGameOver = gamePanel.isGameOver();
         // Space bar pressed: make bird jump or reset if game over
         if (key == KeyEvent.VK_SPACE) {
-            if (gamePanel.isGameOver()) {
+            if (isGameOver) {
                 gamePanel.resetGame();
             } else {
                 gamePanel.getBird().jump();
             }
+        }else if(key == KeyEvent.VK_ENTER){
+            if(isGameOver){
+                gamePanel.resetGame();
+            }
+        }else if((key == KeyEvent.VK_UP || key == KeyEvent.VK_W) && !isGameOver){
+            gamePanel.getBird().jump();
         }
     }
 }
