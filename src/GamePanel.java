@@ -13,6 +13,8 @@ import javafx.embed.swing.JFXPanel;
 // import java.io.IOException;
 // import java.awt.*;
 // import javax.imageio.ImageIO;
+import src.FxGameOverView;
+import src.GameOverListener;
 
 // import src.SpriteSheet.Sprites;
 
@@ -373,6 +375,9 @@ public class GamePanel extends JPanel implements ActionListener {
      * Must be called on Swing EDT.
      */
     private void exitToMenu() {
+       scoreManager.updateHighScore();
+       System.exit(0);
+
         if (gameOverActionListener != null) {
             gameOverActionListener.onExitToMenu();
         }
