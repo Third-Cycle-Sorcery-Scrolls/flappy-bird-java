@@ -15,7 +15,7 @@ public class Bird {
     private int height;
     private BufferedImage img = Assets.BIRD;
     private int velocityY;
-    private static final int GRAVITY = 1;
+    private int gravity = 1;
     private static final int JUMP_FORCE = -9;
 
     public Bird(int x, int y, int width, int height) {
@@ -31,7 +31,7 @@ public class Bird {
      * Updates the bird's position by applying gravity.
      */
     public void move() {
-        velocityY += GRAVITY;
+        velocityY += gravity;
         y += velocityY;
         // Prevent the bird from moving above the top of the panel
         if (y < 0) {
@@ -86,5 +86,9 @@ public class Bird {
 
     public int getHeight() {
         return height;
+    }
+
+    public void setGravity(int gravity) {
+        this.gravity = gravity;
     }
 }

@@ -36,6 +36,14 @@ public class GamePanel extends JPanel implements ActionListener {
 
     private Timer gameLoopTimer;
     private Timer pipeSpawnerTimer;
+    private final PipePool pipePool = new PipePool();
+
+    private GamePhase currentPhase;
+    private Timer phaseTimer;
+    private long phaseStartTime;
+    private boolean isDarkMode = false;
+    private float darknessAlpha = 0f;
+    private Color darkOverlay = new Color(0, 0, 0, 0);
 
 //Another way to try sprite using spriteimage helper class
 
@@ -90,7 +98,6 @@ Trial for sprite image implementation
         setFocusable(true);
 
         
-
         // Load images
         
         backgroundImg = Assets.BACKGROUND;
@@ -104,12 +111,26 @@ Trial for sprite image implementation
         pipes = new ArrayList<>();
         scoreManager = new ScoreManager();
         gameOver = false;
+        // Phasers
+        currentPhase = GamePhase.PHASE_1;
+        isDarkMode = currentPhase.isDark();
+
+        phaseTimer = new Timer(100, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e){
+                checkPhaseTransition();
+            }
+        });
+        phaseTimer.start();
+        phaseStartTime = System.currentTimeMillis();
+
 
         // Set up input listener
         addKeyListener(new Input(this));
 
+        // Modify pipe spawner
         // Timer to spawn pipes every 1.5 seconds
-        pipeSpawnerTimer = new Timer(1500, new ActionListener() {
+        pipeSpawnerTimer = new Timer(currentPhase.getHGap(), new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 placePipe();
@@ -122,18 +143,74 @@ Trial for sprite image implementation
         gameLoopTimer.start();
     }
 
-    private final PipePool pipePool = new PipePool();
-    //  Places a new pair of top and bottom pipes with a random vertical offset.
-private void placePipe() {
-    int pipeWidth = 64;
-    int pipeHeight = 512;
-    int x = boardWidth; // start from right edge
-    int randomTopY = - (int)(Math.random() * (pipeHeight / 2)) - pipeHeight / 4;
+    private void checkPhaseTransition(){
+        long elapsedTime = System.currentTimeMillis() - phaseStartTime;
 
-    // Acquire a pipe from the pipePool class
-    Pipe pipePair = pipePool.acquire(x, randomTopY, pipeWidth, pipeHeight);
-    pipes.add(pipePair);
-}
+        if(elapsedTime >= currentPhase.getDuration()){
+            advanceToNextPhase();
+        }
+
+        if(isDarkMode && darknessAlpha < 0.7f){
+            darknessAlpha += 0.01f;
+            if(darknessAlpha > 0.7f){
+                darknessAlpha = 0.7f;
+            }
+            darkOverlay = new Color(0, 0, 0, (int)(darknessAlpha * 255));
+        }else if(!isDarkMode && darknessAlpha > 0f){
+            darknessAlpha -= 0.01f;
+            if(darknessAlpha < 0f){
+                darknessAlpha = 0f;
+            }
+            darkOverlay = new Color(0, 0, 0, (int)(darknessAlpha * 255));
+        }
+    }
+
+    private void advanceToNextPhase(){
+        int nextOrdinal = currentPhase.ordinal() + 1;
+        if(nextOrdinal < GamePhase.values().length){
+            currentPhase = GamePhase.values()[nextOrdinal];
+            applyPhaseSettings();
+            phaseStartTime = System.currentTimeMillis();
+
+            showPhaseTransition();
+        }
+    }
+
+    private void applyPhaseSettings(){
+        pipeSpawnerTimer.setDelay(currentPhase.getHGap());
+        pipeSpawnerTimer.restart();
+
+        for(Pipe pipe : pipes){
+            pipe.setSpeed(currentPhase.getPipeSpeed());
+        }
+        bird.setGravity(currentPhase.getGravity());
+
+        isDarkMode = currentPhase.isDark();
+        if(!isDarkMode){
+            darknessAlpha = 0f;
+            darkOverlay = new Color(0, 0, 0, 0);
+        }
+    }
+
+    private void showPhaseTransition(){
+        System.out.println("Entering " + currentPhase.getPhaseName());
+        // May be sound effects, popups, later...
+    }
+
+    //  Places a new pair of top and bottom pipes with a random vertical offset.
+    private void placePipe() {
+        int pipeWidth = 64;
+        int pipeHeight = 512;
+        int x = boardWidth; // start from right edge
+        int randomTopY = -(int)(Math.random() * (pipeHeight / 2)) - pipeHeight / 4;
+
+        // Use phase-specific vGap
+        int vGap = currentPhase.getVGap();
+                      
+        // Acquire a pipe from the pipePool class
+        Pipe pipePair = pipePool.acquire(x, randomTopY, pipeWidth, pipeHeight, vGap, currentPhase.getPipeSpeed());
+        pipes.add(pipePair);
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -158,29 +235,29 @@ private void placePipe() {
         // Move bird
         bird.move();
         // Move pipes and check for passing and collisions
-Iterator<Pipe> it = pipes.iterator();
-while (it.hasNext()) {
-    Pipe pipe = it.next();
-    pipe.move();
+        Iterator<Pipe> it = pipes.iterator();
+        while (it.hasNext()) {
+            Pipe pipe = it.next();
+            pipe.move();
 
-    // scoring
-    if (!pipe.isPassed() && bird.getX() > pipe.getX() + pipe.getWidth()) {
-        scoreManager.incrementScore();
-        pipe.setPassed(true);
-    }
+            // scoring
+            if (!pipe.isPassed() && bird.getX() > pipe.getX() + pipe.getWidth()) {
+                scoreManager.incrementScore();
+                pipe.setPassed(true);
+            }
 
-    // collision
-    if (CollisionDetector.isColliding(bird, pipe)) {
-        gameOver = true;
-        break;
-    }
+            // collision
+            if (CollisionDetector.isColliding(bird, pipe)) {
+                gameOver = true;
+                break;
+            }
 
-    // release when completely off left side of screen
-    if (pipe.isOffScreen()) {
-        it.remove();
-        pipePool.release(pipe); // return to pool for reuse
-    }
-}
+            // release when completely off left side of screen
+            if (pipe.isOffScreen()) {
+                it.remove();
+                pipePool.release(pipe); // return to pool for reuse
+            }
+        }
 
 
         // Check if bird hit the ground
@@ -204,6 +281,16 @@ while (it.hasNext()) {
         // Draw background
         g.drawImage(backgroundImg, 0, 0, boardWidth, boardHeight, null);
 
+        // Apply darkness overlay if in dark phase
+        if (isDarkMode || darknessAlpha > 0) {
+            Graphics2D g2d = (Graphics2D) g;
+            Composite oldComposite = g2d.getComposite();
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, darknessAlpha));
+            g2d.setColor(Color.BLACK);
+            g2d.fillRect(0, 0, boardWidth, boardHeight);
+            g2d.setComposite(oldComposite);
+        }
+
         // Draw bird
         bird.draw(g);
 
@@ -214,14 +301,26 @@ while (it.hasNext()) {
 
         // Draw score
         g.setColor(Color.white);
+        g.setFont(new Font("Arial", Font.PLAIN, 20));
+        
+        // Draw phase info
+        long elapsed = System.currentTimeMillis() - phaseStartTime;
+        long remaining = Math.max(0, currentPhase.getDuration() - elapsed);
+        int secondsRemaining = (int)(remaining / 1000);
+        
+        g.drawString("Phase " + currentPhase.getPhaseNumber() + ": " + 
+                    currentPhase.getPhaseName(), 10, 25);
+        g.drawString("Time: " + secondsRemaining + "s", 10, 50);
+        
+        // Draw score
         g.setFont(new Font("Arial", Font.PLAIN, 32));
         if (gameOver) {
-            //Primitive and experimental positoining. fix later
-            g.drawImage(gameOverImg, 0, boardHeight/2 - 42, 180*2, 42*2,null);
-            g.drawString("Game Over: " + scoreManager.getScore(), 10, 35);
-            
+            g.drawImage(gameOverImg, 0, boardHeight/2 - 42, 180*2, 42*2, null);
+            g.drawString("Final Score: " + scoreManager.getScore(), 10, 80);
+            g.setFont(new Font("Arial", Font.PLAIN, 24));
+            g.drawString("Phase: " + currentPhase.getPhaseName(), 10, 110);
         } else {
-            g.drawString("Score: " + scoreManager.getScore(), 10, 35);
+            g.drawString("Score: " + scoreManager.getScore(), 10, 80);
         }
     }
 
@@ -236,7 +335,14 @@ while (it.hasNext()) {
     bird.reset(boardWidth / 8, boardHeight / 2);
     scoreManager.reset();
     gameOver = false;
+    currentPhase = GamePhase.PHASE_1;
+    phaseStartTime = System.currentTimeMillis();
+    isDarkMode = currentPhase.isDark();
+    darknessAlpha = 0f;
+    darkOverlay = new Color(0, 0, 0, 0);
+    applyPhaseSettings();
     // restart timers as before
+    phaseTimer.restart();
     pipeSpawnerTimer.start();
     gameLoopTimer.start();
 }

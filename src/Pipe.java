@@ -20,22 +20,27 @@ public class Pipe {
 
     private boolean passed;
 
-    private static final int VELOCITY_X = -4;
-    private static final int GAP = 150; // gap between top and bottom pipe
+    //private static final int VELOCITY_X = -4;
+    //private static final int GAP = 150; // gap between top and bottom pipe
 
     // Cached rectangles to avoid allocating new Rectangle objects every frame
     private final Rectangle topBounds = new Rectangle();
     private final Rectangle bottomBounds = new Rectangle();
 
+    private int vGap;
+    private int speed;
+
     /**
      * Constructor for Pipe pair.
      * Note: prefer creating via PipePool or calling reset after construction.
      */
-    public Pipe(int startX, int topY, int width, int height) {
+    public Pipe(int startX, int topY, int width, int height, int vGap, int speed) {
         this.x = startX;
         this.topY = topY;
         this.width = width;
         this.height = height;
+        this.vGap = vGap;
+        this.speed = speed;
         this.passed = false;
         updateBounds();
     }
@@ -44,11 +49,13 @@ public class Pipe {
      * Reset this pipe so it can be reused.
      * This should be called when retrieving a pipe from a pool.
      */
-    public void reset(int startX, int topY, int width, int height) {
+    public void reset(int startX, int topY, int width, int height, int vGap, int speed){
         this.x = startX;
         this.topY = topY;
         this.width = width;
         this.height = height;
+        this.vGap = vGap;
+        this.speed = speed;
         this.passed = false;
         updateBounds();
     }
@@ -57,7 +64,7 @@ public class Pipe {
      * Moves the pipe horizontally based on velocity and updates bounds.
      */
     public void move() {
-        x += VELOCITY_X;
+        x += speed;
         updateBounds();
     }
 
@@ -77,7 +84,7 @@ public class Pipe {
         // Draw top pipe
         g.drawImage(topImage, x, topY, width, height, null);
         // Draw bottom pipe (gap below top pipe)
-        int bottomY = topY + height + GAP;
+        int bottomY = topY + height + vGap;
         g.drawImage(bottomImage, x, bottomY, width, height, null);
     }
 
@@ -86,7 +93,7 @@ public class Pipe {
      */
     private void updateBounds() {
         topBounds.setBounds(x, topY, width, height);
-        int bottomY = topY + height + GAP;
+        int bottomY = topY + height + vGap;
         bottomBounds.setBounds(x, bottomY, width, height);
     }
 
@@ -122,5 +129,13 @@ public class Pipe {
 
     public void setPassed(boolean passed) {
         this.passed = passed;
+    }
+
+    public void setSpeed(int speed) {
+        this.speed = speed;
+    }
+
+    public void setVGap(int vGap) {
+        this.vGap = vGap;
     }
 }
